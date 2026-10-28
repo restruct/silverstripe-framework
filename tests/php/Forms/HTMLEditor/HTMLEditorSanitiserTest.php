@@ -173,6 +173,18 @@ class HTMLEditorSanitiserTest extends FunctionalTest
                 'Object with safe xml content in data attribute is retained'
             ],
             [
+                'object[data]',
+                '<object data="data:application/xml;base64,PHNjcmlwdD5hbGVydChkb2N1bWVudC5sb2NhdGlvbik8L3NjcmlwdD4=">',
+                '<object></object>',
+                'Object with dangerous application/xml content in data attribute is completely removed'
+            ],
+            [
+                'object[data]',
+                '<object data="data:application/xhtml+xml;base64,PHNjcmlwdD5hbGVydChkb2N1bWVudC5sb2NhdGlvbik8L3NjcmlwdD4=">',
+                '<object></object>',
+                'Object with dangerous application/xhtml+xml content in data attribute is completely removed'
+            ],
+            [
                 'img[src]',
                 '<img src="https://owasp.org/myimage.jpg" style="url:xss" onerror="alert(1)">',
                 '<img src="https://owasp.org/myimage.jpg">',
