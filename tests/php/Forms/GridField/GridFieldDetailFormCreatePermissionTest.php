@@ -2,7 +2,6 @@
 
 namespace SilverStripe\Forms\Tests\GridField;
 
-use PHPUnit\Framework\Attributes\DataProvider;
 use SilverStripe\Dev\CSSContentParser;
 use SilverStripe\Dev\FunctionalTest;
 use SilverStripe\Forms\Tests\GridField\GridFieldDetailFormCreatePermissionTest\CreateRestrictedController;
@@ -20,7 +19,7 @@ class GridFieldDetailFormCreatePermissionTest extends FunctionalTest
 
     protected static $disable_themes = true;
 
-    public static function provideDoSaveNewRecord(): array
+    public function provideDoSaveNewRecord(): array
     {
         return [
             'member without create permission' => [
@@ -41,8 +40,8 @@ class GridFieldDetailFormCreatePermissionTest extends FunctionalTest
      * posted title, because the form a member without create permission is served is readonly and so
      * posts no field values - a bypassed create writes a row with a blank title, which a title filter
      * would not see.
+     * @dataProvider provideDoSaveNewRecord
      */
-    #[DataProvider('provideDoSaveNewRecord')]
     public function testDoSaveNewRecord(string $permission, int $expectedStatusCode, int $expectedNumCreated): void
     {
         $this->logInWithPermission($permission);

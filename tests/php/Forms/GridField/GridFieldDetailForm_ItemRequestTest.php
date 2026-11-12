@@ -178,7 +178,7 @@ class GridFieldDetailForm_ItemRequestTest extends SapphireTest
      * still works, so the fix does not weaken existing functionality.
      * @dataProvider provideSaveFormAllowsPermittedInHierarchyClassNameChange
      */
-        public function testSaveFormAllowsPermittedInHierarchyClassNameChange(bool $isNewRecord): void
+    public function testSaveFormAllowsPermittedInHierarchyClassNameChange(bool $isNewRecord): void
     {
         $record = new TestModel();
         $record->Name = 'Original';
