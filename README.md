@@ -9,7 +9,7 @@ This is a fork of [silverstripe/silverstripe-framework](https://github.com/silve
 > - **Security fixes only.** The aim is to backport the fix for every published advisory against this package, at any severity, for as long as CMS 5 is in partial support upstream. This is best effort: there is no guaranteed response time.
 > - **No features, no general bug fixes.** Requests to port those will normally be declined. Use CMS 6 for them.
 > - **It may be discontinued at any time.** The fork exists mainly to keep our own projects secure until they move to CMS 6. Anyone is welcome to use it as is, under the same license and with no warranty. Help is appreciated: a report of a missed advisory or of a regression in a backport, or a pull request with a backport.
-> - **Not affiliated with or endorsed by Silverstripe.** The fixes are upstream's own work; any mistake in backporting them is ours. Do not report problems with this fork to Silverstripe.
+> - **Not affiliated with or endorsed by Silverstripe.** The fixes are upstream's own work, except the mfa fix, which upstream did not publish for CMS 5 and is ours; any mistake in backporting them is ours too. Do not report problems with this fork to Silverstripe.
 > - **Found a new vulnerability?** Do not open a public issue. If it is in Silverstripe's code, report it to [security@silverstripe.org](mailto:security@silverstripe.org) as upstream asks. If it is in a change this fork made, email [dev@restruct.nl](mailto:dev@restruct.nl).
 > - **The way out is CMS 6.** When a site upgrades, remove the fork and feed repositories (and the Packagist exclude) from the project's `composer.json`.
 
@@ -17,7 +17,7 @@ This is a fork of [silverstripe/silverstripe-framework](https://github.com/silve
 
 For a CMS 5.4 project. Your `require` section stays as it is: the forks keep the upstream package names.
 
-1. Add this to your project's `composer.json`. Keep all four forks even if the project does not use one of them
+1. Add this to your project's `composer.json`. Keep all five forks even if the project does not use one of them
    (an unused entry costs nothing), and keep the order: forks first, then the feed, then Packagist.
 
    ```json
@@ -26,9 +26,10 @@ For a CMS 5.4 project. Your `require` section stays as it is: the forks keep the
        {"type": "vcs", "url": "https://github.com/restruct/silverstripe-versioned", "only": ["silverstripe/versioned"]},
        {"type": "vcs", "url": "https://github.com/restruct/silverstripe-assets", "only": ["silverstripe/assets"]},
        {"type": "vcs", "url": "https://github.com/restruct/silverstripe-userforms", "only": ["silverstripe/userforms"]},
+       {"type": "vcs", "url": "https://github.com/restruct/silverstripe-mfa", "only": ["silverstripe/mfa"]},
        {"type": "composer", "url": "https://restruct.github.io/ss5-advisories"},
        {"type": "composer", "url": "https://repo.packagist.org",
-        "exclude": ["silverstripe/framework", "silverstripe/versioned", "silverstripe/assets", "silverstripe/userforms", "silverstripe/cms"]},
+        "exclude": ["silverstripe/framework", "silverstripe/versioned", "silverstripe/assets", "silverstripe/userforms", "silverstripe/mfa", "silverstripe/cms"]},
        {"packagist.org": false}
    ]
    ```
@@ -37,34 +38,28 @@ For a CMS 5.4 project. Your `require` section stays as it is: the forks keep the
    provide these packages.
 
 2. Remove any `config.policy.advisories.ignore-id` (or `audit.ignore`) entries for the advisories in the table
-   below. The feed handles them per version; an ignore would silence them for every version.
+   below, including the mfa one (`PKSA-xxk3-rjxm-jftv`). The feed handles them per version; an ignore would silence them for every version.
 
 3. Update and check:
 
    ```bash
-   composer update silverstripe/framework silverstripe/versioned silverstripe/assets silverstripe/userforms silverstripe/cms
-   composer show | grep -E '^silverstripe/(framework|versioned|assets|userforms|cms) '
+   composer update silverstripe/framework silverstripe/versioned silverstripe/assets silverstripe/userforms silverstripe/mfa silverstripe/cms
+   composer show | grep -E '^silverstripe/(framework|versioned|assets|userforms|mfa|cms) '
    composer audit
    ```
 
-   `composer show` should list the `-pN` versions (`5.4.30-p1`, `2.4.8-p1`, `2.4.6-p1`, `6.4.10-p1` if the project uses userforms) and cms from the 5.4 line.
+   `composer show` should list the `-pN` versions (`5.4.30-p1`, `2.4.8-p1`, `2.4.6-p1`, `6.4.10-p1` if the project uses userforms, `5.4.4-p1` if it uses mfa) and cms from the 5.4 line.
    `composer audit` should not list any of the advisories this fork set handles. Then run `dev/build flush=1`.
 
-4. Using silverstripe/mfa? Its advisory (CVE-2026-55186) is fixed by
-   [restruct/silverstripe-mfa-bundle](https://github.com/restruct/silverstripe-mfa-bundle), not here. With the bundle
-   installed at 1.9.1 or later (require `"restruct/silverstripe-mfa-bundle": "^1.9.1"`), ignore that one advisory
-   with the reason:
-   `"config": {"policy": {"advisories": {"ignore-id": {"PKSA-xxk3-rjxm-jftv": "fixed by restruct/silverstripe-mfa-bundle >= 1.9.1"}}}}`.
-
-To stop using the forks (for example when moving to CMS 6), remove these repository entries and the mfa ignore again.
+To stop using the forks (for example when moving to CMS 6), remove these repository entries again.
 
 ## Why CMS 5 needs this
 
 CMS 5.4 is in partial support: upstream fixes only security issues with a CVSS score of 7.0 or higher on it ([release policy](https://github.com/silverstripe/developer-docs/blob/6/en/12_Project_Governance/05_Release_policy.md#partial-support)). The medium-severity fixes of June and October 2026 were released for CMS 6 only, so a fully updated CMS 5 site still carries them. The right fix is to upgrade to CMS 6; this fork is for the time a site cannot do that yet.
 
-The fixes are upstream's own commits, cherry-picked with `git cherry-pick -x` onto branch `5.4-restruct`. Where a commit did not apply as is, the commit message has a "Backport note" saying what was adapted and why. Tests were adapted to PHPUnit 9.6 (CMS 5) in separate commits and no assertion was weakened. The one existing expectation that changed is the one upstream changed with the same fix (framework, CVE-2026-88987: `data:text/xml` is now removed), and it is in a commit of its own.
+The fixes are upstream's own commits, cherry-picked with `git cherry-pick -x` onto branch `5.4-restruct`. Where a commit did not apply as is, the commit message has a "Backport note" saying what was adapted and why. Tests were adapted to PHPUnit 9.6 (CMS 5) in separate commits and no assertion was weakened. The one existing expectation that changed is the one upstream changed with the same fix (framework, CVE-2026-88987: `data:text/xml` is now removed), and it is in a commit of its own. The exception is mfa CVE-2026-55186: upstream published no fix for CMS 5, so that fix was written for this fork set, with its own regression tests, and is marked as such in the table.
 
-Companion forks, for the other packages with backported fixes: [restruct/silverstripe-versioned](https://github.com/restruct/silverstripe-versioned) (`silverstripe/versioned`), [restruct/silverstripe-assets](https://github.com/restruct/silverstripe-assets) (`silverstripe/assets`), [restruct/silverstripe-userforms](https://github.com/restruct/silverstripe-userforms) (`silverstripe/userforms`).
+Companion forks, for the other packages with backported fixes: [restruct/silverstripe-versioned](https://github.com/restruct/silverstripe-versioned) (`silverstripe/versioned`), [restruct/silverstripe-assets](https://github.com/restruct/silverstripe-assets) (`silverstripe/assets`), [restruct/silverstripe-userforms](https://github.com/restruct/silverstripe-userforms) (`silverstripe/userforms`), [restruct/silverstripe-mfa](https://github.com/restruct/silverstripe-mfa) (`silverstripe/mfa`).
 
 ## Advisories against the CMS 5 stack, and what was done with each
 
@@ -86,7 +81,7 @@ All advisories published for these packages in 2026 that affect their latest CMS
 | userforms | CVE-2026-91111<br>PKSA-vyds-y4jb-5ff4 | Uploaded XML XSS | Backported in **assets** 2.4.6-p1: the fix is in silverstripe/assets. Like the upstream fix, userforms 6.4.10-p1 requires the patched assets release (`^2.4.6-p1`) | [`88750f95e8`](https://github.com/silverstripe/silverstripe-assets/commit/88750f95e8eafcae6ce41bc131056ca75d960d7f) |
 | userforms | CVE-2026-88992<br>PKSA-w1yx-v3g8-nw8g | Userforms CSV export restricted file access | Backported in userforms 6.4.10-p1 | [`4d752ea8f3`](https://github.com/silverstripe/silverstripe-userforms/commit/4d752ea8f3e26a6423e90b7d07c92ae69f96ec2c) |
 | userforms | SS-2026-005<br>PKSA-r5k2-9jwp-nhhh | XSS in required field label | Backported in userforms 6.4.10-p1 | [`bc96ea4af2`](https://github.com/silverstripe/silverstripe-userforms/commit/bc96ea4af2d5eb026f739c4b36a36c2244caca57) |
-| mfa | CVE-2026-55186<br>PKSA-xxk3-rjxm-jftv | Can bypass MFA during password reset flow | Not in these forks. Upstream disclosed it without a fix for CMS 5; [restruct/silverstripe-mfa-bundle](https://github.com/restruct/silverstripe-mfa-bundle) fixes it from 1.9.1 | - |
+| mfa | CVE-2026-55186<br>PKSA-xxk3-rjxm-jftv | Can bypass MFA during password reset flow | Fixed in mfa 5.4.4-p1. Upstream disclosed it without a fix for CMS 5, so the fix is this fork's own (the same one ships in [restruct/silverstripe-mfa-bundle](https://github.com/restruct/silverstripe-mfa-bundle) 1.9.1): the change password form refuses a reset until the multi-factor check is completed, for that member | [`004ea58cdd`](https://github.com/restruct/silverstripe-mfa/commit/004ea58cdd3154c9b293f6973a99e0e97fbe58ec) |
 | cms | CVE-2026-54717<br>PKSA-pjvm-vnw2-n3m2 | XSS in breadcrumbs in page list view | Not applicable: in cms 5.4 the list view builds the breadcrumb line with `SiteTree::Breadcrumbs()`, which escapes titles. Checked by rendering the list view for a parent page titled `<img src=x onerror=alert(1)>`: the line came out as `&lt;img src=x onerror=alert(1)&gt;/`. The unescaped loop the upstream fix replaces first appears in cms 6.0 | [`62f9912baa`](https://github.com/silverstripe/silverstripe-cms/commit/62f9912baa18c80304f3fa8b6eca71bb5dc2d21e) |
 
 Already fixed by upstream in a CMS 5 release (update to that release or later; nothing to backport):
@@ -100,7 +95,7 @@ Already fixed by upstream in a CMS 5 release (update to that release or later; n
 
 ## Installation details
 
-The four forks are installed together, with the advisory feed that goes with them (see Quick start above; [restruct/ss5-advisories](https://github.com/restruct/ss5-advisories#use-it-in-a-project) explains each line). The forks are listed first and limited with `only` to their own package, and Packagist is told not to serve these package names.
+The five forks are installed together, with the advisory feed that goes with them (see Quick start above; [restruct/ss5-advisories](https://github.com/restruct/ss5-advisories#use-it-in-a-project) explains each line). The forks are listed first and limited with `only` to their own package, and Packagist is told not to serve these package names.
 
 Releases are tagged `<upstream version>-pN` (`5.4.30-p1` is the first). Composer treats that as a stable version above `5.4.30` and below the next upstream release, so existing constraints such as `^5.4` keep matching.
 
