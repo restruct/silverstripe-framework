@@ -52,8 +52,9 @@ For a CMS 5.4 project. Your `require` section stays as it is: the forks keep the
 
 4. Using silverstripe/mfa? Its advisory (CVE-2026-55186) is fixed by
    [restruct/silverstripe-mfa-bundle](https://github.com/restruct/silverstripe-mfa-bundle), not here. With the bundle
-   installed, ignore that one advisory with the reason:
-   `"config": {"policy": {"advisories": {"ignore-id": {"PKSA-xxk3-rjxm-jftv": "fixed by restruct/silverstripe-mfa-bundle"}}}}`.
+   installed at 1.9.1 or later (require `"restruct/silverstripe-mfa-bundle": "^1.9.1"`), ignore that one advisory
+   with the reason:
+   `"config": {"policy": {"advisories": {"ignore-id": {"PKSA-xxk3-rjxm-jftv": "fixed by restruct/silverstripe-mfa-bundle >= 1.9.1"}}}}`.
 
 To stop using the forks (for example when moving to CMS 6), remove these repository entries and the mfa ignore again.
 
@@ -85,7 +86,7 @@ All advisories published for these packages in 2026 that affect their latest CMS
 | userforms | CVE-2026-91111<br>PKSA-vyds-y4jb-5ff4 | Uploaded XML XSS | Backported in **assets** 2.4.6-p1: the fix is in silverstripe/assets. Like the upstream fix, userforms 6.4.10-p1 requires the patched assets release (`^2.4.6-p1`) | [`88750f95e8`](https://github.com/silverstripe/silverstripe-assets/commit/88750f95e8eafcae6ce41bc131056ca75d960d7f) |
 | userforms | CVE-2026-88992<br>PKSA-w1yx-v3g8-nw8g | Userforms CSV export restricted file access | Backported in userforms 6.4.10-p1 | [`4d752ea8f3`](https://github.com/silverstripe/silverstripe-userforms/commit/4d752ea8f3e26a6423e90b7d07c92ae69f96ec2c) |
 | userforms | SS-2026-005<br>PKSA-r5k2-9jwp-nhhh | XSS in required field label | Backported in userforms 6.4.10-p1 | [`bc96ea4af2`](https://github.com/silverstripe/silverstripe-userforms/commit/bc96ea4af2d5eb026f739c4b36a36c2244caca57) |
-| mfa | CVE-2026-55186<br>PKSA-xxk3-rjxm-jftv | Can bypass MFA during password reset flow | Not in these forks. Upstream disclosed it without a fix for CMS 5; [restruct/silverstripe-mfa-bundle](https://github.com/restruct/silverstripe-mfa-bundle) fixes it; the release is named in its changelog | - |
+| mfa | CVE-2026-55186<br>PKSA-xxk3-rjxm-jftv | Can bypass MFA during password reset flow | Not in these forks. Upstream disclosed it without a fix for CMS 5; [restruct/silverstripe-mfa-bundle](https://github.com/restruct/silverstripe-mfa-bundle) fixes it from 1.9.1 | - |
 | cms | CVE-2026-54717<br>PKSA-pjvm-vnw2-n3m2 | XSS in breadcrumbs in page list view | Not applicable: in cms 5.4 the list view builds the breadcrumb line with `SiteTree::Breadcrumbs()`, which escapes titles. Checked by rendering the list view for a parent page titled `<img src=x onerror=alert(1)>`: the line came out as `&lt;img src=x onerror=alert(1)&gt;/`. The unescaped loop the upstream fix replaces first appears in cms 6.0 | [`62f9912baa`](https://github.com/silverstripe/silverstripe-cms/commit/62f9912baa18c80304f3fa8b6eca71bb5dc2d21e) |
 
 Already fixed by upstream in a CMS 5 release (update to that release or later; nothing to backport):
