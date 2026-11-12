@@ -11,7 +11,7 @@ This is a fork of [silverstripe/silverstripe-framework](https://github.com/silve
 > - **It may be discontinued at any time.** The fork exists mainly to keep our own projects secure until they move to CMS 6. Anyone is welcome to use it as is, under the same license and with no warranty. Help is appreciated: a report of a missed advisory or of a regression in a backport, or a pull request with a backport.
 > - **Not affiliated with or endorsed by Silverstripe.** The fixes are upstream's own work; any mistake in backporting them is ours. Do not report problems with this fork to Silverstripe.
 > - **Found a new vulnerability?** Do not open a public issue. If it is in Silverstripe's code, report it to [security@silverstripe.org](mailto:security@silverstripe.org) as upstream asks. If it is in a change this fork made, email [dev@restruct.nl](mailto:dev@restruct.nl).
-> - **The way out is CMS 6.** When a site upgrades, remove this repository and its advisory ignores from the project's `composer.json`.
+> - **The way out is CMS 6.** When a site upgrades, remove the fork and feed repositories (and the Packagist exclude) from the project's `composer.json`.
 
 ## Why CMS 5 needs this
 
@@ -38,7 +38,7 @@ All advisories published for these packages in 2026 that affect their latest CMS
 | **framework** | CVE-2026-91113<br>PKSA-2h3f-jtk1-8f25 | User-controlled ClassName allows unauthorized record type change | Backported in framework 5.4.30-p1 | [`8b6e9c4514`](https://github.com/silverstripe/silverstripe-framework/commit/8b6e9c4514cbe37feeaf9ddddf796a3109448187) |
 | **framework** | CVE-2026-91115<br>PKSA-bqyr-kn4k-vx5h | RCE via i18nTextCollectorTask writer parameter | Not applicable: the advisory affects framework >=6.0.0 only | - |
 | versioned | CVE-2026-55779<br>PKSA-nksq-cxj8-zb32 | XSS in archive admin restore | Backported in versioned 2.4.8-p1 | [`6e30a2cf8d`](https://github.com/silverstripe/silverstripe-versioned/commit/6e30a2cf8d4b9233690464da61bd0fc4d3e92952) |
-| userforms | CVE-2026-91111<br>PKSA-vyds-y4jb-5ff4 | Uploaded XML XSS | Backported in **assets** 2.4.6-p1: the fix is in silverstripe/assets, the userforms fix only raises its assets requirement | [`88750f95e8`](https://github.com/silverstripe/silverstripe-assets/commit/88750f95e8eafcae6ce41bc131056ca75d960d7f) |
+| userforms | CVE-2026-91111<br>PKSA-vyds-y4jb-5ff4 | Uploaded XML XSS | Backported in **assets** 2.4.6-p1: the fix is in silverstripe/assets. Like the upstream fix, userforms 6.4.10-p1 requires the patched assets release (`^2.4.6-p1`) | [`88750f95e8`](https://github.com/silverstripe/silverstripe-assets/commit/88750f95e8eafcae6ce41bc131056ca75d960d7f) |
 | userforms | CVE-2026-88992<br>PKSA-w1yx-v3g8-nw8g | Userforms CSV export restricted file access | Backported in userforms 6.4.10-p1 | [`4d752ea8f3`](https://github.com/silverstripe/silverstripe-userforms/commit/4d752ea8f3e26a6423e90b7d07c92ae69f96ec2c) |
 | userforms | SS-2026-005<br>PKSA-r5k2-9jwp-nhhh | XSS in required field label | Backported in userforms 6.4.10-p1 | [`bc96ea4af2`](https://github.com/silverstripe/silverstripe-userforms/commit/bc96ea4af2d5eb026f739c4b36a36c2244caca57) |
 | mfa | CVE-2026-55186<br>PKSA-xxk3-rjxm-jftv | Can bypass MFA during password reset flow | Not in these forks. Upstream disclosed it without a fix for CMS 5; [restruct/silverstripe-mfa-bundle](https://github.com/restruct/silverstripe-mfa-bundle) fixes it; the release is named in its changelog | - |
@@ -55,21 +55,15 @@ Already fixed by upstream in a CMS 5 release (update to that release or later; n
 
 ## Installation
 
-Add the fork **first** in your project's `repositories`, limited to this package:
+Install the four forks together, with the advisory feed that goes with them: [restruct/ss5-advisories](https://github.com/restruct/ss5-advisories#use-it-in-a-project) has the `repositories` block to add to your project and explains each line. The forks are listed first and limited with `only` to their own package, and Packagist is told not to serve these package names.
 
-```json
-"repositories": [
-    {"type": "vcs", "url": "https://github.com/restruct/silverstripe-framework", "only": ["silverstripe/framework"]}
-]
-```
+Releases are tagged `<upstream version>-pN` (`5.4.30-p1` is the first). Composer treats that as a stable version above `5.4.30` and below the next upstream release, so existing constraints such as `^5.4` keep matching.
 
-Then `composer update silverstripe/framework`. Releases are tagged `<upstream version>-pN` (`5.4.30-p1` is the first): Composer treats that as a stable version above `5.4.30` and below the next upstream release, so existing constraints such as `^5.4` keep matching.
+Do not set `"canonical": false` on the fork repositories. With the forks canonical, a later upstream release on Packagist cannot silently replace the patched build; each upstream release is merged in here and tagged as `<version>-p1`. A scheduled job on this repository opens an issue when upstream tags a new release on this line.
 
-Do not set `"canonical": false` on this repository. With the fork canonical, a later upstream release on Packagist cannot silently replace the patched build; each upstream release is merged in here and tagged as `<version>-p1`. A scheduled job on this repository opens an issue when upstream tags a new release on this line.
+### Why the advisory feed
 
-### `composer audit` and the install-time advisory block
-
-Packagist records advisories by package name and version range, and does not know about this fork, so the patched version still falls inside the published ranges. `composer audit` reports the advisories above and, by default, Composer refuses to install the version. Ignore each advisory this fork fixes, with the reason, in your project's `composer.json` (`config.policy.advisories.ignore-id`, Composer 2.9+), and remove the entries again when you move to CMS 6. Note that an ignore applies to every version of the package, so it only belongs in a project that installs the package from this fork.
+Packagist records advisories by package name and version range and does not know about this fork, so a patched tag still falls inside the published ranges: `composer audit` reports the advisories above and Composer refuses to install it. The feed carries the same advisories with the patched tags taken out of the ranges, and nothing else changed, so an advisory that is not backported still blocks and reports. It rebuilds itself from Packagist every day.
 
 ## Maintenance
 
