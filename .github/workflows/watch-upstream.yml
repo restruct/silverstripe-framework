@@ -1,0 +1,43 @@
+name: Watch upstream releases
+
+# Opens an issue when silverstripe/silverstripe-framework tags a new 5.4.x release. This branch carries
+# security backports on top of upstream 5.4.30, and sites that use this fork do not receive upstream
+# releases (the fork's repository is canonical for the package), so each upstream release has to be
+# merged in here and tagged as <version>-p1 by hand. Scheduled workflows only run from the
+# repository's default branch.
+
+on:
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      UPSTREAM: silverstripe/silverstripe-framework
+      LINE: '5.4'
+      # The upstream release this branch is currently based on; raise it when a release is merged in.
+      BASE: '5.4.30'
+    steps:
+      - name: Open an issue for each upstream release newer than BASE
+        run: |
+          set -euo pipefail
+          gh api "repos/$UPSTREAM/tags?per_page=100" --paginate --jq '.[].name' \
+            | grep -E "^${LINE//./\\.}\.[0-9]+$" | sort -V > upstream-tags.txt
+          while read -r tag; do
+            # Only tags that sort after BASE
+            [ "$tag" = "$BASE" ] && continue
+            [ "$(printf '%s\n%s\n' "$BASE" "$tag" | sort -V | tail -1)" = "$tag" ] || continue
+            title="Upstream released $tag"
+            # Skip if an issue for this tag exists already, open or closed
+            existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state all --search "\"$title\" in:title" --json title --jq "map(select(.title == \"$title\")) | length")
+            [ "$existing" -gt 0 ] && continue
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body "$UPSTREAM tagged [$tag](https://github.com/$UPSTREAM/releases/tag/$tag). Merge it into \`${LINE}-restruct\`, run the suite, tag \`${tag}-p1\` and set \`BASE\` in this workflow to \`$tag\`."
+            echo "Opened: $title"
+          done < upstream-tags.txt
