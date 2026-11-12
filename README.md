@@ -13,6 +13,50 @@ This is a fork of [silverstripe/silverstripe-framework](https://github.com/silve
 > - **Found a new vulnerability?** Do not open a public issue. If it is in Silverstripe's code, report it to [security@silverstripe.org](mailto:security@silverstripe.org) as upstream asks. If it is in a change this fork made, email [dev@restruct.nl](mailto:dev@restruct.nl).
 > - **The way out is CMS 6.** When a site upgrades, remove the fork and feed repositories (and the Packagist exclude) from the project's `composer.json`.
 
+## Quick start
+
+For a CMS 5.4 project. Your `require` section stays as it is: the forks keep the upstream package names.
+
+1. Add this to your project's `composer.json`. Keep all four forks even if the project does not use one of them
+   (an unused entry costs nothing), and keep the order: forks first, then the feed, then Packagist.
+
+   ```json
+   "repositories": [
+       {"type": "vcs", "url": "https://github.com/restruct/silverstripe-framework", "only": ["silverstripe/framework"]},
+       {"type": "vcs", "url": "https://github.com/restruct/silverstripe-versioned", "only": ["silverstripe/versioned"]},
+       {"type": "vcs", "url": "https://github.com/restruct/silverstripe-assets", "only": ["silverstripe/assets"]},
+       {"type": "vcs", "url": "https://github.com/restruct/silverstripe-userforms", "only": ["silverstripe/userforms"]},
+       {"type": "composer", "url": "https://restruct.github.io/ss5-advisories"},
+       {"type": "composer", "url": "https://repo.packagist.org",
+        "exclude": ["silverstripe/framework", "silverstripe/versioned", "silverstripe/assets", "silverstripe/userforms", "silverstripe/cms"]},
+       {"packagist.org": false}
+   ]
+   ```
+
+   If the project already has a `repositories` section, add these entries to it, ahead of any other entry that could
+   provide these packages.
+
+2. Remove any `config.policy.advisories.ignore-id` (or `audit.ignore`) entries for the advisories in the table
+   below. The feed handles them per version; an ignore would silence them for every version.
+
+3. Update and check:
+
+   ```bash
+   composer update silverstripe/framework silverstripe/versioned silverstripe/assets silverstripe/userforms silverstripe/cms
+   composer show | grep -E '^silverstripe/(framework|versioned|assets|userforms|cms) '
+   composer audit
+   ```
+
+   `composer show` should list the `-pN` versions (`5.4.30-p1`, `2.4.8-p1`, `2.4.6-p1`, `6.4.10-p1` if the project uses userforms) and cms from the 5.4 line.
+   `composer audit` should not list any of the advisories this fork set handles. Then run `dev/build flush=1`.
+
+4. Using silverstripe/mfa? Its advisory (CVE-2026-55186) is fixed by
+   [restruct/silverstripe-mfa-bundle](https://github.com/restruct/silverstripe-mfa-bundle), not here. With the bundle
+   installed, ignore that one advisory with the reason:
+   `"config": {"policy": {"advisories": {"ignore-id": {"PKSA-xxk3-rjxm-jftv": "fixed by restruct/silverstripe-mfa-bundle"}}}}`.
+
+To stop using the forks (for example when moving to CMS 6), remove these repository entries and the mfa ignore again.
+
 ## Why CMS 5 needs this
 
 CMS 5.4 is in partial support: upstream fixes only security issues with a CVSS score of 7.0 or higher on it ([release policy](https://github.com/silverstripe/developer-docs/blob/6/en/12_Project_Governance/05_Release_policy.md#partial-support)). The medium-severity fixes of June and October 2026 were released for CMS 6 only, so a fully updated CMS 5 site still carries them. The right fix is to upgrade to CMS 6; this fork is for the time a site cannot do that yet.
@@ -53,9 +97,9 @@ Already fixed by upstream in a CMS 5 release (update to that release or later; n
 - userforms 6.4.10: SS-2026-001, Template injection RCE in userforms
 - userforms 6.4.10: SS-2026-006, RCE via template string escaping in userforms email subject
 
-## Installation
+## Installation details
 
-Install the four forks together, with the advisory feed that goes with them: [restruct/ss5-advisories](https://github.com/restruct/ss5-advisories#use-it-in-a-project) has the `repositories` block to add to your project and explains each line. The forks are listed first and limited with `only` to their own package, and Packagist is told not to serve these package names.
+The four forks are installed together, with the advisory feed that goes with them (see Quick start above; [restruct/ss5-advisories](https://github.com/restruct/ss5-advisories#use-it-in-a-project) explains each line). The forks are listed first and limited with `only` to their own package, and Packagist is told not to serve these package names.
 
 Releases are tagged `<upstream version>-pN` (`5.4.30-p1` is the first). Composer treats that as a stable version above `5.4.30` and below the next upstream release, so existing constraints such as `^5.4` keep matching.
 
