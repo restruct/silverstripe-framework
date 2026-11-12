@@ -1,37 +1,82 @@
-## Silverstripe Framework
+# silverstripe/framework: CMS 5 security backports
 
-[![CI](https://github.com/silverstripe/silverstripe-framework/actions/workflows/ci.yml/badge.svg)](https://github.com/silverstripe/silverstripe-framework/actions/workflows/ci.yml)
-[![Silverstripe supported module](https://img.shields.io/badge/silverstripe-supported-0071C4.svg)](https://www.silverstripe.org/software/addons/silverstripe-commercially-supported-module-list/)
+*Maintained by [Restruct](https://github.com/restruct). If this fork saves you time, you can [support ongoing maintenance](https://github.com/sponsors/restruct).*
 
-PHP framework forming the base for the Silverstripe CMS ([https://silverstripe.org](https://silverstripe.org)). 
-Requires a [`silverstripe-installer`](https://github.com/silverstripe/silverstripe-installer) base project. Typically used alongside the [`cms`](https://github.com/silverstripe/silverstripe-cms) module.
+This is a fork of [silverstripe/silverstripe-framework](https://github.com/silverstripe/silverstripe-framework) for sites that still run Silverstripe CMS 5. It adds the medium-severity security fixes that upstream released for CMS 6 only, on top of upstream `5.4.30`, and changes nothing else. The package name stays `silverstripe/framework`.
+
+> **What to expect from this fork**
+>
+> - **Security fixes only.** The aim is to backport the fix for every published advisory against this package, at any severity, for as long as CMS 5 is in partial support upstream. This is best effort: there is no guaranteed response time.
+> - **No features, no general bug fixes.** Requests to port those will normally be declined. Use CMS 6 for them.
+> - **It may be discontinued at any time.** The fork exists mainly to keep our own projects secure until they move to CMS 6. Anyone is welcome to use it as is, under the same license and with no warranty. Help is appreciated: a report of a missed advisory or of a regression in a backport, or a pull request with a backport.
+> - **Not affiliated with or endorsed by Silverstripe.** The fixes are upstream's own work; any mistake in backporting them is ours. Do not report problems with this fork to Silverstripe.
+> - **Found a new vulnerability?** Do not open a public issue. If it is in Silverstripe's code, report it to [security@silverstripe.org](mailto:security@silverstripe.org) as upstream asks. If it is in a change this fork made, email [dev@restruct.nl](mailto:dev@restruct.nl).
+> - **The way out is CMS 6.** When a site upgrades, remove this repository and its advisory ignores from the project's `composer.json`.
+
+## Why CMS 5 needs this
+
+CMS 5.4 is in partial support: upstream fixes only security issues with a CVSS score of 7.0 or higher on it ([release policy](https://github.com/silverstripe/developer-docs/blob/6/en/12_Project_Governance/05_Release_policy.md#partial-support)). The medium-severity fixes of June and October 2026 were released for CMS 6 only, so a fully updated CMS 5 site still carries them. The right fix is to upgrade to CMS 6; this fork is for the time a site cannot do that yet.
+
+The fixes are upstream's own commits, cherry-picked with `git cherry-pick -x` onto branch `5.4-restruct`. Where a commit did not apply as is, the commit message has a "Backport note" saying what was adapted and why. Tests were adapted to PHPUnit 9.6 (CMS 5) in separate commits and no assertion was weakened. The one existing expectation that changed is the one upstream changed with the same fix (framework, CVE-2026-88987: `data:text/xml` is now removed), and it is in a commit of its own.
+
+Companion forks, for the other packages with backported fixes: [restruct/silverstripe-versioned](https://github.com/restruct/silverstripe-versioned) (`silverstripe/versioned`), [restruct/silverstripe-assets](https://github.com/restruct/silverstripe-assets) (`silverstripe/assets`), [restruct/silverstripe-userforms](https://github.com/restruct/silverstripe-userforms) (`silverstripe/userforms`).
+
+## Advisories against the CMS 5 stack, and what was done with each
+
+All advisories published for these packages in 2026 that affect their latest CMS 5 releases. Every fork lists the full set, so the whole picture is visible from any of them.
+
+| Package | Advisory | Title | Status | Upstream fix |
+|---|---|---|---|---|
+| **framework** | SS-2026-004<br>PKSA-s9ft-gn8c-nz8s | Password reset token account takeover | Backported in framework 5.4.30-p1 | [`06e668db01`](https://github.com/silverstripe/silverstripe-framework/commit/06e668db01050895bb7e767fbf0b368c1081f479) |
+| **framework** | CVE-2026-88989<br>PKSA-byd1-vwr7-j3ng | Auth bypass GridFieldDetailForm | Backported in framework 5.4.30-p1 | [`693c948bae`](https://github.com/silverstripe/silverstripe-framework/commit/693c948bae13dd2a854489baa575123ca3e60155) |
+| **framework** | CVE-2026-54720<br>PKSA-x6tz-s6v3-ynk3 | XSS attack through media embed | Backported in framework 5.4.30-p1 | [`1bcb02adfc`](https://github.com/silverstripe/silverstripe-framework/commit/1bcb02adfc365c6436dc26ab2f6dd32d97f3979b) |
+| **framework** | CVE-2026-91110<br>PKSA-mxm6-h6dq-vmtc | XSS using control bytes | Backported in framework 5.4.30-p1 | [`dbf965166d`](https://github.com/silverstripe/silverstripe-framework/commit/dbf965166da909739a197c95b27dd9ee2fde93c9) |
+| **framework** | CVE-2026-88987<br>PKSA-3ddc-hhgt-bqh9 | XSS via XHTML data URI | Backported in framework 5.4.30-p1. As upstream, `data:text/xml` is now removed as well | [`cea9c46eba`](https://github.com/silverstripe/silverstripe-framework/commit/cea9c46eba4be31a06adf6980494623385e1296d) |
+| **framework** | CVE-2026-88988<br>PKSA-v91s-x13r-xsps | XSS via SVG data URI | Backported in framework 5.4.30-p1 | [`9b61e6d04d`](https://github.com/silverstripe/silverstripe-framework/commit/9b61e6d04da1a3183c4ef4081cb64fd31ae0701f) |
+| **framework** | CVE-2026-91112<br>PKSA-r36n-y55f-yj29 | CMS_ACCESS_SecurityAdmin privilege escalation | Backported in framework 5.4.30-p1 | [`bb4d04a498`](https://github.com/silverstripe/silverstripe-framework/commit/bb4d04a498c34e21e428d029c4ce82bbdcce31b1) |
+| **framework** | CVE-2026-91114<br>PKSA-2w11-jnmw-7vn5 | Stored XSS via unescaped permission in PermissionCheckboxSetField | Backported in framework 5.4.30-p1 | [`3ac8440a3a`](https://github.com/silverstripe/silverstripe-framework/commit/3ac8440a3accc04e5dbca1a41513d628920e58c2) |
+| **framework** | CVE-2026-91113<br>PKSA-2h3f-jtk1-8f25 | User-controlled ClassName allows unauthorized record type change | Backported in framework 5.4.30-p1 | [`8b6e9c4514`](https://github.com/silverstripe/silverstripe-framework/commit/8b6e9c4514cbe37feeaf9ddddf796a3109448187) |
+| **framework** | CVE-2026-91115<br>PKSA-bqyr-kn4k-vx5h | RCE via i18nTextCollectorTask writer parameter | Not applicable: the advisory affects framework >=6.0.0 only | - |
+| versioned | CVE-2026-55779<br>PKSA-nksq-cxj8-zb32 | XSS in archive admin restore | Backported in versioned 2.4.8-p1 | [`6e30a2cf8d`](https://github.com/silverstripe/silverstripe-versioned/commit/6e30a2cf8d4b9233690464da61bd0fc4d3e92952) |
+| userforms | CVE-2026-91111<br>PKSA-vyds-y4jb-5ff4 | Uploaded XML XSS | Backported in **assets** 2.4.6-p1: the fix is in silverstripe/assets, the userforms fix only raises its assets requirement | [`88750f95e8`](https://github.com/silverstripe/silverstripe-assets/commit/88750f95e8eafcae6ce41bc131056ca75d960d7f) |
+| userforms | CVE-2026-88992<br>PKSA-w1yx-v3g8-nw8g | Userforms CSV export restricted file access | Backported in userforms 6.4.10-p1 | [`4d752ea8f3`](https://github.com/silverstripe/silverstripe-userforms/commit/4d752ea8f3e26a6423e90b7d07c92ae69f96ec2c) |
+| userforms | SS-2026-005<br>PKSA-r5k2-9jwp-nhhh | XSS in required field label | Backported in userforms 6.4.10-p1 | [`bc96ea4af2`](https://github.com/silverstripe/silverstripe-userforms/commit/bc96ea4af2d5eb026f739c4b36a36c2244caca57) |
+| mfa | CVE-2026-55186<br>PKSA-xxk3-rjxm-jftv | Can bypass MFA during password reset flow | Not in these forks. Upstream disclosed it without a fix for CMS 5; [restruct/silverstripe-mfa-bundle](https://github.com/restruct/silverstripe-mfa-bundle) fixes it; the release is named in its changelog | - |
+| cms | CVE-2026-54717<br>PKSA-pjvm-vnw2-n3m2 | XSS in breadcrumbs in page list view | Not applicable: in cms 5.4 the list view builds the breadcrumb line with `SiteTree::Breadcrumbs()`, which escapes titles. Checked by rendering the list view for a parent page titled `<img src=x onerror=alert(1)>`: the line came out as `&lt;img src=x onerror=alert(1)&gt;/`. The unescaped loop the upstream fix replaces first appears in cms 6.0 | [`62f9912baa`](https://github.com/silverstripe/silverstripe-cms/commit/62f9912baa18c80304f3fa8b6eca71bb5dc2d21e) |
+
+Already fixed by upstream in a CMS 5 release (update to that release or later; nothing to backport):
+
+- assets 2.4.5: CVE-2026-24749, DBFile permission bypass
+- assets 2.4.6: SS-2026-003, RCE via renamed uploaded file
+- userforms 6.4.9: CVE-2026-54721, Remote code execution via userforms email subject
+- userforms 6.4.10: CVE-2026-88991, RCE in email subject field via template execution
+- userforms 6.4.10: SS-2026-001, Template injection RCE in userforms
+- userforms 6.4.10: SS-2026-006, RCE via template string escaping in userforms email subject
 
 ## Installation
 
-See [getting started](https://docs.silverstripe.org/en/getting_started/)
-for instructions on how to start the installation process.
+Add the fork **first** in your project's `repositories`, limited to this package:
 
-## Bugtracker
+```json
+"repositories": [
+    {"type": "vcs", "url": "https://github.com/restruct/silverstripe-framework", "only": ["silverstripe/framework"]}
+]
+```
 
-Bugs are tracked on [github.com](https://github.com/silverstripe/silverstripe-framework/issues). 
-Please read our [issue reporting guidelines](https://docs.silverstripe.org/en/contributing/issues_and_bugs/).
+Then `composer update silverstripe/framework`. Releases are tagged `<upstream version>-pN` (`5.4.30-p1` is the first): Composer treats that as a stable version above `5.4.30` and below the next upstream release, so existing constraints such as `^5.4` keep matching.
 
-## Development and Contribution
+Do not set `"canonical": false` on this repository. With the fork canonical, a later upstream release on Packagist cannot silently replace the patched build; each upstream release is merged in here and tagged as `<version>-p1`. A scheduled job on this repository opens an issue when upstream tags a new release on this line.
 
-If you would like to make changes to the Silverstripe core codebase, we have an extensive [guide to contributing code](https://docs.silverstripe.org/en/contributing/code/).
+### `composer audit` and the install-time advisory block
 
-## Links
+Packagist records advisories by package name and version range, and does not know about this fork, so the patched version still falls inside the published ranges. `composer audit` reports the advisories above and, by default, Composer refuses to install the version. Ignore each advisory this fork fixes, with the reason, in your project's `composer.json` (`config.policy.advisories.ignore-id`, Composer 2.9+), and remove the entries again when you move to CMS 6. Note that an ignore applies to every version of the package, so it only belongs in a project that installs the package from this fork.
 
- * [Server Requirements](https://docs.silverstripe.org/en/getting_started/server_requirements/)
- * [Changelogs](https://docs.silverstripe.org/en/changelogs/)
- * [Bugtracker: Framework](https://github.com/silverstripe/silverstripe-framework/issues)
- * [Bugtracker: CMS](https://github.com/silverstripe/silverstripe-cms/issues)
- * [Bugtracker: Installer](https://github.com/silverstripe/silverstripe-installer/issues)
- * [Forums](https://forum.silverstripe.org/)
- * [Developer Mailinglist](https://groups.google.com/forum/#!forum/silverstripe-dev)
- * [License](./LICENSE)
-	
-## Attribution
+## Maintenance
 
- * Some icons by [Yusuke Kamiyamane](https://p.yusukekamiyamane.com/). All rights reserved. Licensed under a [Creative Commons Attribution 3.0 License](https://creativecommons.org/licenses/by/3.0/).
- * default_media.png by Thibault Geffroy from [The Noun Project](https://thenounproject.com/). All rights reserved. Licensed under a [Creative Commons Attribution 3.0 License](https://creativecommons.org/licenses/by/3.0/).
+Maintained, best effort, while CMS 5 is in partial support upstream, or until upstream releases these fixes for CMS 5, whichever comes first (see "What to expect" above). Report a missed advisory or a regression in a backport in this repository's issues. For everything else about the package itself, see the [upstream repository](https://github.com/silverstripe/silverstripe-framework).
+
+Before each tag, the package's own test suite is run on the lowest and highest PHP version CMS 5 supports here (8.1 and 8.3), against an unmodified CMS 5.4 install, and compared with the same run on the upstream release it is based on. Tags are never moved or rewritten: a correction gets the next `-pN`.
+
+## License
+
+BSD-3-Clause, as upstream. See [LICENSE](LICENSE).
