@@ -4,7 +4,7 @@ namespace SilverStripe\Security\Tests;
 
 use InvalidArgumentException;
 use SilverStripe\Control\Controller;
-use SilverStripe\Core\Validation\ValidationException;
+use SilverStripe\ORM\ValidationException;
 use SilverStripe\Dev\FunctionalTest;
 use SilverStripe\Forms\RequiredFields;
 use SilverStripe\ORM\ArrayList;
