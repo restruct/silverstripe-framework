@@ -23,7 +23,7 @@ jobs:
       UPSTREAM: silverstripe/silverstripe-framework
       LINE: '5.4'
       # The upstream release this branch is currently based on; raise it when a release is merged in.
-      BASE: '5.4.30'
+      BASE: '5.4.31'
     steps:
       - name: Open an issue for each upstream release newer than BASE
         run: |
