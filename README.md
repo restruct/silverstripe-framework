@@ -99,7 +99,7 @@ Already fixed by upstream in a CMS 5 release (update to that release or later; n
 
 The five forks are installed together, with the advisory feed that goes with them (see Quick start above; [restruct/ss5-advisories](https://github.com/restruct/ss5-advisories#use-it-in-a-project) explains each line). The forks are listed first and limited with `only` to their own package, and Packagist is told not to serve these package names.
 
-Releases are tagged `<upstream version>-pN` (`5.4.31-p1` is the first). Composer treats that as a stable version above `5.4.31` and below the next upstream release, so existing constraints such as `^5.4` keep matching.
+Releases are tagged `<upstream version>-pN` (the latest is `5.4.31-p1`). Composer treats that as a stable version above `5.4.31` and below the next upstream release, so existing constraints such as `^5.4` keep matching.
 
 Do not set `"canonical": false` on the fork repositories. With the forks canonical, a later upstream release on Packagist cannot silently replace the patched build; each upstream release is merged in here and tagged as `<version>-p1`. A scheduled job on this repository opens an issue when upstream tags a new release on this line.
 
